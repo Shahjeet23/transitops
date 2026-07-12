@@ -12,6 +12,7 @@ import {
   LogOut,
   Settings,
   Shield,
+  Sparkles,
   Truck,
   Users,
   Wrench,
@@ -28,6 +29,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/fuel", label: "Fuel", icon: Fuel },
   { href: "/dashboard/expenses", label: "Expenses", icon: DollarSign },
   { href: "/dashboard/reports", label: "Reports", icon: BarChart3 },
+  { href: "/dashboard/assistant", label: "Assistant", icon: Sparkles },
 ];
 
 function NavItem({

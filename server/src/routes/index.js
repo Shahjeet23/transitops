@@ -20,6 +20,6 @@ router.use('/fuel',        require('./fuel.routes'));
 router.use('/expenses',    require('./expense.routes'));
 // router.use('/dashboard',   require('./dashboard.routes'));
 router.use('/reports',     require('./report.routes'));
-// router.use('/analytics',   require('./analytics.routes'));
+router.use('/ai',          require('./ai.routes'));
 
 module.exports = router;
