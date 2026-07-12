@@ -11,6 +11,8 @@ interface Props {
   serverError?: string | null;
 }
 
+import { SearchableSelect } from "@/components/ui/searchable-select";
+
 export function MaintenanceForm({ initialData, onSubmit, isLoading, serverError }: Props) {
   const isEditing = !!initialData;
   const [vehicleId, setVehicleId] = useState("");
@@ -68,6 +70,19 @@ export function MaintenanceForm({ initialData, onSubmit, isLoading, serverError 
     onSubmit(payload);
   };
 
+  const vehicleOptions = vehiclesData?.data?.map((v) => ({
+    label: `${v.plateNumber} - ${v.make} ${v.model}`,
+    value: v._id,
+  })) || [];
+
+  if (isEditing && initialData?.vehicle) {
+    const vId = typeof initialData.vehicle === "string" ? initialData.vehicle : initialData.vehicle._id;
+    const vLabel = typeof initialData.vehicle === "string" ? initialData.vehicle : initialData.vehicle.plateNumber;
+    if (!vehicleOptions.find(o => o.value === vId)) {
+      vehicleOptions.push({ label: `${vLabel} (Current)`, value: vId });
+    }
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {serverError && (
@@ -97,26 +112,13 @@ export function MaintenanceForm({ initialData, onSubmit, isLoading, serverError 
           <label htmlFor="vehicle" className="text-sm font-medium text-foreground">
             Vehicle <span className="text-destructive">*</span>
           </label>
-          <select
-            id="vehicle"
-            required
+          <SearchableSelect
+            options={vehicleOptions}
             value={vehicleId}
-            onChange={(e) => setVehicleId(e.target.value)}
+            onChange={setVehicleId}
+            placeholder="Select a vehicle"
             disabled={isLoading || (isEditing && initialData.status !== "scheduled")}
-            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition disabled:opacity-50"
-          >
-            <option value="" disabled>Select a vehicle</option>
-            {vehiclesData?.data?.map((v) => (
-              <option key={v._id} value={v._id}>
-                {v.plateNumber} - {v.make} {v.model}
-              </option>
-            ))}
-            {isEditing && initialData.vehicle && !vehiclesData?.data?.find(v => v._id === (typeof initialData.vehicle === "string" ? initialData.vehicle : initialData.vehicle._id)) && (
-              <option value={typeof initialData.vehicle === "string" ? initialData.vehicle : initialData.vehicle._id}>
-                {typeof initialData.vehicle === "string" ? initialData.vehicle : initialData.vehicle.plateNumber} (Current)
-              </option>
-            )}
-          </select>
+          />
         </div>
 
         <div className="space-y-1.5">

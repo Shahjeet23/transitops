@@ -34,6 +34,8 @@ const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
   { value: "cheque", label: "Cheque" },
 ];
 
+import { SearchableSelect } from "@/components/ui/searchable-select";
+
 export function ExpenseForm({ initialData, onSubmit, isLoading, serverError }: Props) {
   const isEditing = !!initialData;
   const [vehicleId, setVehicleId] = useState("");
@@ -94,6 +96,38 @@ export function ExpenseForm({ initialData, onSubmit, isLoading, serverError }: P
 
     onSubmit(payload);
   };
+
+  const vehicleOptions = [
+    { label: "None", value: "" },
+    ...(vehiclesData?.data?.map((v) => ({
+      label: `${v.plateNumber} - ${v.make} ${v.model}`,
+      value: v._id,
+    })) || []),
+  ];
+
+  if (isEditing && initialData?.vehicle && vehicleId) {
+    const vId = typeof initialData.vehicle === "string" ? initialData.vehicle : initialData.vehicle._id;
+    const vLabel = typeof initialData.vehicle === "string" ? initialData.vehicle : initialData.vehicle.plateNumber;
+    if (!vehicleOptions.find(o => o.value === vId)) {
+      vehicleOptions.push({ label: `${vLabel} (Current)`, value: vId });
+    }
+  }
+
+  const driverOptions = [
+    { label: "None", value: "" },
+    ...(driversData?.data?.map((d) => ({
+      label: d.name,
+      value: d._id,
+    })) || []),
+  ];
+
+  if (isEditing && initialData?.driver && driverId) {
+    const dId = typeof initialData.driver === "string" ? initialData.driver : initialData.driver._id;
+    const dLabel = typeof initialData.driver === "string" ? initialData.driver : initialData.driver.name;
+    if (!driverOptions.find(o => o.value === dId)) {
+      driverOptions.push({ label: `${dLabel} (Current)`, value: dId });
+    }
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -196,40 +230,26 @@ export function ExpenseForm({ initialData, onSubmit, isLoading, serverError }: P
           <label htmlFor="vehicle" className="text-sm font-medium text-foreground">
             Related Vehicle (Optional)
           </label>
-          <select
-            id="vehicle"
+          <SearchableSelect
+            options={vehicleOptions}
             value={vehicleId}
-            onChange={(e) => setVehicleId(e.target.value)}
+            onChange={setVehicleId}
+            placeholder="None"
             disabled={isLoading}
-            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition disabled:opacity-50"
-          >
-            <option value="">None</option>
-            {vehiclesData?.data?.map((v) => (
-              <option key={v._id} value={v._id}>
-                {v.plateNumber} - {v.make} {v.model}
-              </option>
-            ))}
-          </select>
+          />
         </div>
 
         <div className="space-y-1.5">
           <label htmlFor="driver" className="text-sm font-medium text-foreground">
             Related Driver (Optional)
           </label>
-          <select
-            id="driver"
+          <SearchableSelect
+            options={driverOptions}
             value={driverId}
-            onChange={(e) => setDriverId(e.target.value)}
+            onChange={setDriverId}
+            placeholder="None"
             disabled={isLoading}
-            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition disabled:opacity-50"
-          >
-            <option value="">None</option>
-            {driversData?.data?.map((d) => (
-              <option key={d._id} value={d._id}>
-                {d.name}
-              </option>
-            ))}
-          </select>
+          />
         </div>
 
         <div className="space-y-1.5">
