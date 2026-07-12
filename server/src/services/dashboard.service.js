@@ -33,7 +33,6 @@ function daysAgo(n) {
   return d;
 }
 
-// ─── Service ──────────────────────────────────────────────────────────────────
 
 
 async function getDashboardSummary() {
