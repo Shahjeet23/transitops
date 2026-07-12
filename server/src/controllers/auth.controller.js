@@ -106,6 +106,22 @@ const updateUserRole = asyncHandler(async (req, res) => {
   return sendSuccess(res, { user }, 'User role updated successfully');
 });
 
+/**
+ * POST /api/auth/users
+ */
+const createUser = asyncHandler(async (req, res) => {
+  const user = await authService.createUser(req.body);
+  return sendSuccess(res, { user }, 'User created successfully', 201);
+});
+
+/**
+ * DELETE /api/auth/users/:id
+ */
+const deleteUser = asyncHandler(async (req, res) => {
+  await authService.deleteUser(req.params.id, req.user._id);
+  return sendSuccess(res, null, 'User deleted successfully');
+});
+
 module.exports = {
   register,
   login,
@@ -117,4 +133,6 @@ module.exports = {
   getUsers,
   toggleUserStatus,
   updateUserRole,
+  createUser,
+  deleteUser,
 };

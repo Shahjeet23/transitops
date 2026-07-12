@@ -51,6 +51,23 @@ async function registerUser(data) {
   return user.toPublic();
 }
 
+/**
+ * Create a new user (admin only).
+ * Admins can create any role, including other admins.
+ * @param {{ name, email, password, role }} data
+ * @returns {object} Sanitized user
+ */
+async function createUser(data) {
+  const { name, email, password, role } = data;
+
+  const exists = await User.findOne({ email });
+  if (exists) {
+    throw new AppError('A user with this email already exists', 409);
+  }
+
+  const user = await User.create({ name, email, password, role });
+  return user.toPublic();
+}
 
 /**
  * Authenticate a user with email + password. Returns tokens.
@@ -267,6 +284,22 @@ async function updateUserRole(targetUserId, newRole, requestingUserId) {
   return user.toPublic();
 }
 
+/**
+ * Hard delete a user (admin only).
+ * @param {string} targetUserId
+ * @param {string} requestingUserId
+ */
+async function deleteUser(targetUserId, requestingUserId) {
+  if (targetUserId === requestingUserId.toString()) {
+    throw new AppError('You cannot delete your own account', 400);
+  }
+
+  const user = await User.findByIdAndDelete(targetUserId);
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+}
+
 module.exports = {
   registerUser,
   loginUser,
@@ -278,4 +311,6 @@ module.exports = {
   getAllUsers,
   toggleUserStatus,
   updateUserRole,
+  createUser,
+  deleteUser,
 };

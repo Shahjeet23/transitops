@@ -21,5 +21,6 @@ router.use('/expenses',    require('./expense.routes'));
 // router.use('/dashboard',   require('./dashboard.routes'));
 router.use('/reports',     require('./report.routes'));
 router.use('/ai',          require('./ai.routes'));
+router.use('/notifications', require('./notification.routes'));
 
 module.exports = router;

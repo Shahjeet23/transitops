@@ -4,6 +4,7 @@ const Trip = require('../models/Trip');
 const Vehicle = require('../models/Vehicle');
 const Driver = require('../models/Driver');
 const AppError = require('../utils/AppError');
+const notificationService = require('./notification.service');
 
 /**
  * Retrieve a paginated list of trips
@@ -142,6 +143,14 @@ async function dispatchTrip(id, data, userId) {
   driver.currentVehicle = vehicle._id;
   await driver.save();
 
+  // Notify Fleet Manager
+  notificationService.createNotification({
+    title: 'Trip Dispatched',
+    message: `Trip ${trip.tripNumber || id} has been dispatched for vehicle ${vehicle.plateNumber}.`,
+    type: 'trip',
+    recipientRole: 'fleet_manager'
+  }).catch(err => console.error('Notification error:', err));
+
   return trip;
 }
 
@@ -189,6 +198,14 @@ async function completeTrip(id, data, userId) {
     await driver.save();
   }
 
+  // Notify Fleet Manager
+  notificationService.createNotification({
+    title: 'Trip Completed',
+    message: `Trip ${trip.tripNumber || id} has been completed.`,
+    type: 'trip',
+    recipientRole: 'fleet_manager'
+  }).catch(err => console.error('Notification error:', err));
+
   return trip;
 }
 
@@ -227,6 +244,14 @@ async function cancelTrip(id, reason, userId) {
   trip.status = 'cancelled';
   trip.cancellationReason = reason;
   await trip.save();
+
+  // Notify Fleet Manager
+  notificationService.createNotification({
+    title: 'Trip Cancelled',
+    message: `Trip ${trip.tripNumber || id} was cancelled. Reason: ${reason}`,
+    type: 'trip',
+    recipientRole: 'fleet_manager'
+  }).catch(err => console.error('Notification error:', err));
 
   return trip;
 }

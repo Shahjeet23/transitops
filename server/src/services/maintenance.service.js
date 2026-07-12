@@ -3,6 +3,7 @@
 const MaintenanceLog = require('../models/MaintenanceLog');
 const Vehicle = require('../models/Vehicle');
 const AppError = require('../utils/AppError');
+const notificationService = require('./notification.service');
 
 /**
  * Retrieve a paginated list of maintenance logs
@@ -67,6 +68,15 @@ async function createMaintenance(data, userId) {
   data.status = 'scheduled';
 
   const log = await MaintenanceLog.create(data);
+
+  // Notify Safety Officer
+  notificationService.createNotification({
+    title: 'Maintenance Scheduled',
+    message: `Maintenance scheduled for a vehicle.`,
+    type: 'maintenance',
+    recipientRole: 'safety_officer'
+  }).catch(err => console.error('Notification error:', err));
+
   return log;
 }
 
@@ -117,6 +127,14 @@ async function startMaintenance(id, data, userId) {
   vehicle.status = 'in_maintenance';
   await vehicle.save();
 
+  // Notify Safety Officer
+  notificationService.createNotification({
+    title: 'Maintenance Started',
+    message: `Maintenance started for vehicle ${vehicle.plateNumber}.`,
+    type: 'maintenance',
+    recipientRole: 'safety_officer'
+  }).catch(err => console.error('Notification error:', err));
+
   return log;
 }
 
@@ -155,6 +173,21 @@ async function completeMaintenance(id, data, userId) {
     // usually maintenance doesn't add mileage. We leave it as is unless required.
     await vehicle.save();
   }
+
+  // Notify Fleet Manager & Safety Officer (using 'all' for now, or just emit twice)
+  notificationService.createNotification({
+    title: 'Maintenance Completed',
+    message: `Maintenance completed for vehicle.`,
+    type: 'maintenance',
+    recipientRole: 'safety_officer'
+  }).catch(err => console.error('Notification error:', err));
+  
+  notificationService.createNotification({
+    title: 'Maintenance Completed',
+    message: `Maintenance completed for vehicle.`,
+    type: 'maintenance',
+    recipientRole: 'fleet_manager'
+  }).catch(err => console.error('Notification error:', err));
 
   return log;
 }

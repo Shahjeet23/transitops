@@ -72,4 +72,13 @@ export const authApi = {
     const { data } = await api.patch(`/auth/users/${userId}/role`, { role });
     return data.data;
   },
+
+  createUser: async (payload: RegisterPayload): Promise<{ user: User }> => {
+    const { data } = await api.post("/auth/users", payload);
+    return data.data;
+  },
+
+  deleteUser: async (userId: string): Promise<void> => {
+    await api.delete(`/auth/users/${userId}`);
+  },
 };

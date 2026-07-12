@@ -50,4 +50,10 @@ router.patch('/users/:id/status', authenticate, authorize('admin'), authControll
 // PATCH /api/auth/users/:id/role
 router.patch('/users/:id/role', authenticate, authorize('admin'), authController.updateUserRole);
 
+// POST /api/auth/users
+router.post('/users', authenticate, authorize('admin'), authController.createUser);
+
+// DELETE /api/auth/users/:id
+router.delete('/users/:id', authenticate, authorize('admin'), authController.deleteUser);
+
 module.exports = router;

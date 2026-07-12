@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import { useLogout } from "@/hooks/use-auth";
+import { useNotifications } from "@/hooks/use-notifications";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ['admin', 'fleet_manager', 'dispatcher', 'safety_officer', 'financial_analyst'] },
@@ -70,6 +71,8 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const user = useAuthStore((s) => s.user);
   const { mutate: logout, isPending: loggingOut } = useLogout();
+  const { data: notificationsData } = useNotifications();
+  const unreadCount = notificationsData?.meta?.unreadCount || 0;
 
   const initials = user?.name
     ? user.name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2)
@@ -159,6 +162,15 @@ export default function DashboardLayout({
           </div>
 
           <div className="flex items-center gap-3">
+            <Link
+              href="/dashboard/alerts"
+              className="relative p-2 rounded-full hover:bg-muted transition-colors"
+            >
+              <Bell className="w-5 h-5 text-muted-foreground" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1.5 right-2 w-2 h-2 bg-destructive rounded-full ring-2 ring-card" />
+              )}
+            </Link>
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20">
               <Shield className="w-3 h-3 text-primary" />
               <span className="text-xs font-medium text-primary capitalize">

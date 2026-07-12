@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { useAuthStore } from "@/store/auth.store";
-import { User, Shield, Key, Bell, Users as UsersIcon, Check, AlertCircle } from "lucide-react";
+import { User, Shield, Key, Bell, Users as UsersIcon, Check, AlertCircle, Trash2, Plus, X } from "lucide-react";
 import { useUpdateProfile, useChangePassword } from "@/hooks/use-auth";
-import { useUsers, useUpdateUserRole, useToggleUserStatus } from "@/hooks/use-users";
+import { useUsers, useUpdateUserRole, useToggleUserStatus, useCreateUser, useDeleteUser } from "@/hooks/use-users";
 import { format } from "date-fns";
 
 export default function SettingsPage() {
@@ -308,7 +308,22 @@ function AdminTab() {
   const { data, isLoading } = useUsers();
   const { mutate: toggleStatus, isPending: toggling } = useToggleUserStatus();
   const { mutate: updateRole, isPending: updatingRole } = useUpdateUserRole();
+  const { mutate: createUser, isPending: creatingUser, error: createError } = useCreateUser();
+  const { mutate: deleteUser, isPending: deletingUser } = useDeleteUser();
   const currentUser = useAuthStore(s => s.user);
+
+  const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+  const [newUser, setNewUser] = useState({ name: "", email: "", password: "", role: "user" });
+
+  const handleCreateUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    createUser(newUser, {
+      onSuccess: () => {
+        setIsAddUserOpen(false);
+        setNewUser({ name: "", email: "", password: "", role: "user" });
+      }
+    });
+  };
 
   if (isLoading) {
     return <div className="p-8 text-center text-muted-foreground">Loading users...</div>;
@@ -318,11 +333,20 @@ function AdminTab() {
 
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
-      <div className="p-5 border-b border-border/50">
-        <h2 className="text-lg font-semibold text-foreground">User Management</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Manage system access, roles, and privileges for all personnel.
-        </p>
+      <div className="p-5 border-b border-border/50 flex justify-between items-center">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">User Management</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Manage system access, roles, and privileges for all personnel.
+          </p>
+        </div>
+        <button
+          onClick={() => setIsAddUserOpen(true)}
+          className="flex items-center gap-2 bg-primary text-primary-foreground px-3 py-1.5 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+        >
+          <Plus className="w-4 h-4" />
+          Add User
+        </button>
       </div>
       
       <div className="overflow-x-auto">
@@ -366,19 +390,78 @@ function AdminTab() {
                   {u.lastLogin ? format(new Date(u.lastLogin), "MMM d, yyyy") : "Never"}
                 </td>
                 <td className="px-5 py-4">
-                  <button
-                    onClick={() => toggleStatus(u._id)}
-                    disabled={toggling || u._id === currentUser?.id}
-                    className="text-xs font-medium hover:underline disabled:opacity-50 transition-colors text-primary"
-                  >
-                    {u.isActive ? "Deactivate" : "Activate"}
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => toggleStatus(u._id)}
+                      disabled={toggling || u._id === currentUser?.id}
+                      className="text-xs font-medium hover:underline disabled:opacity-50 transition-colors text-primary"
+                    >
+                      {u.isActive ? "Deactivate" : "Activate"}
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (confirm(`Are you sure you want to permanently delete ${u.name}?`)) {
+                          deleteUser(u._id);
+                        }
+                      }}
+                      disabled={deletingUser || u._id === currentUser?.id}
+                      className="p-1 rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-50 transition-colors"
+                      title="Delete User"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {isAddUserOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+          <div className="bg-card border border-border w-full max-w-md rounded-xl shadow-lg overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <h3 className="font-semibold text-foreground">Add New User</h3>
+              <button onClick={() => setIsAddUserOpen(false)} className="text-muted-foreground hover:text-foreground">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleCreateUser} className="p-4 space-y-4">
+              {createError && (
+                <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-lg flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" /> {(createError as any).response?.data?.message || (createError as any).message || "Failed to create user"}
+                </div>
+              )}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Name</label>
+                <input required type="text" value={newUser.name} onChange={e => setNewUser({...newUser, name: e.target.value})} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Email</label>
+                <input required type="email" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Password</label>
+                <input required type="password" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Role</label>
+                <select value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value})} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm capitalize focus:outline-none focus:ring-2 focus:ring-ring">
+                  <option value="user">User</option>
+                  {ROLES.map(r => <option key={r} value={r}>{r.replace(/_/g, ' ')}</option>)}
+                </select>
+              </div>
+              <div className="pt-2 flex justify-end gap-2">
+                <button type="button" onClick={() => setIsAddUserOpen(false)} className="px-4 py-2 rounded-lg text-sm font-medium hover:bg-muted transition-colors">Cancel</button>
+                <button type="submit" disabled={creatingUser} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
+                  {creatingUser ? "Creating..." : "Create User"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
