@@ -55,7 +55,7 @@ export function RevenueExpenseChart({ data }: Props) {
               tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`}
             />
             <Tooltip
-              formatter={(val: number | string | undefined, name: string) => [
+              formatter={(val: any, name: any) => [
                 formatCurrency(Number(val) || 0),
                 name === "revenue" ? "Revenue" : "Expenses",
               ]}

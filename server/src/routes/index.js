@@ -15,11 +15,11 @@ router.use('/vehicles',  vehicleRoutes);
 // Future phases — uncomment as implemented:
 router.use('/drivers',     require('./driver.routes'));
 router.use('/trips',       require('./trip.routes'));
-// router.use('/maintenance', require('./maintenance.routes'));
-// router.use('/fuel',        require('./fuel.routes'));
-// router.use('/expenses',    require('./expense.routes'));
+router.use('/maintenance', require('./maintenance.routes'));
+router.use('/fuel',        require('./fuel.routes'));
+router.use('/expenses',    require('./expense.routes'));
 // router.use('/dashboard',   require('./dashboard.routes'));
-// router.use('/reports',     require('./report.routes'));
+router.use('/reports',     require('./report.routes'));
 // router.use('/analytics',   require('./analytics.routes'));
 
 module.exports = router;

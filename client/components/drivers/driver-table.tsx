@@ -74,12 +74,13 @@ export function DriverTable({ drivers, onEdit, onDelete, isLoading }: Props) {
                     <div className="flex items-center gap-2 text-foreground uppercase font-mono text-xs">
                       {d.licenseNumber} (Type {d.licenseType})
                       {showLicenseWarning && (
-                        <AlertTriangle
-                          className={`w-4 h-4 ${
-                            d.isLicenseExpired ? "text-destructive" : "text-amber-500"
-                          }`}
-                          title={d.isLicenseExpired ? "License Expired" : "License Expiring Soon"}
-                        />
+                        <span title={d.isLicenseExpired ? "License Expired" : "License Expiring Soon"}>
+                          <AlertTriangle
+                            className={`w-4 h-4 ${
+                              d.isLicenseExpired ? "text-destructive" : "text-amber-500"
+                            }`}
+                          />
+                        </span>
                       )}
                     </div>
                     <div className="text-xs text-muted-foreground mt-0.5">
