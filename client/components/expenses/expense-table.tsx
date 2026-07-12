@@ -4,6 +4,8 @@ import { Edit, Trash2, CheckCircle2, XCircle, Receipt } from "lucide-react";
 import type { Expense } from "@/lib/expense.api";
 import type { Vehicle } from "@/lib/vehicle.api";
 import type { Driver } from "@/lib/driver.api";
+import { useAuthStore } from "@/store/auth.store";
+import { hasPermission } from "@/lib/rbac";
 
 interface Props {
   expenses: Expense[];
@@ -21,6 +23,9 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export function ExpenseTable({ expenses, onEdit, onDelete, onApprove, onReject, isLoading }: Props) {
+  const user = useAuthStore(s => s.user);
+  const canManage = hasPermission(user?.role, 'manage_expenses');
+
   if (isLoading) {
     return (
       <div className="rounded-xl border border-border bg-card p-8 flex justify-center">
@@ -57,7 +62,7 @@ export function ExpenseTable({ expenses, onEdit, onDelete, onApprove, onReject, 
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">Category</th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">Amount</th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
-              <th className="px-4 py-3 text-right font-medium text-muted-foreground">Actions</th>
+              {canManage && <th className="px-4 py-3 text-right font-medium text-muted-foreground">Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -102,49 +107,51 @@ export function ExpenseTable({ expenses, onEdit, onDelete, onApprove, onReject, 
                       {expense.status.toUpperCase()}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      {expense.status === "pending" && (
-                        <>
+                  {canManage && (
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        {expense.status === "pending" && (
+                          <>
+                            <button
+                              onClick={() => onApprove(expense._id)}
+                              className="p-1.5 rounded text-muted-foreground hover:bg-green-500/10 hover:text-green-600 transition-colors"
+                              title="Approve Expense"
+                            >
+                              <CheckCircle2 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => onReject(expense)}
+                              className="p-1.5 rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                              title="Reject Expense"
+                            >
+                              <XCircle className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => onEdit(expense)}
+                              className="p-1.5 rounded text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                              title="Edit Expense"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
+                        
+                        {expense.status !== "approved" && (
                           <button
-                            onClick={() => onApprove(expense._id)}
-                            className="p-1.5 rounded text-muted-foreground hover:bg-green-500/10 hover:text-green-600 transition-colors"
-                            title="Approve Expense"
-                          >
-                            <CheckCircle2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => onReject(expense)}
+                            onClick={() => {
+                              if (confirm("Are you sure you want to delete this expense?")) {
+                                onDelete(expense._id);
+                              }
+                            }}
                             className="p-1.5 rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                            title="Reject Expense"
+                            title="Delete Expense"
                           >
-                            <XCircle className="w-4 h-4" />
+                            <Trash2 className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={() => onEdit(expense)}
-                            className="p-1.5 rounded text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-                            title="Edit Expense"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                        </>
-                      )}
-                      
-                      {expense.status !== "approved" && (
-                        <button
-                          onClick={() => {
-                            if (confirm("Are you sure you want to delete this expense?")) {
-                              onDelete(expense._id);
-                            }
-                          }}
-                          className="p-1.5 rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                          title="Delete Expense"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  </td>
+                        )}
+                      </div>
+                    </td>
+                  )}
                 </tr>
               );
             })}

@@ -4,6 +4,8 @@ import { Edit, Trash2, Play, CheckCircle2, XCircle } from "lucide-react";
 import type { Trip } from "@/lib/trip.api";
 import type { Vehicle } from "@/lib/vehicle.api";
 import type { Driver } from "@/lib/driver.api";
+import { useAuthStore } from "@/store/auth.store";
+import { hasPermission } from "@/lib/rbac";
 
 interface Props {
   trips: Trip[];
@@ -32,6 +34,11 @@ export function TripTable({
   onCancel,
   isLoading,
 }: Props) {
+  const user = useAuthStore(s => s.user);
+  const canManage = hasPermission(user?.role, 'manage_trips');
+  const canDelete = hasPermission(user?.role, 'delete_trips');
+  const showActions = canManage || canDelete;
+
   if (isLoading) {
     return (
       <div className="rounded-xl border border-border bg-card p-8 flex justify-center">
@@ -65,7 +72,7 @@ export function TripTable({
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">Route</th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">Schedule</th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
-              <th className="px-4 py-3 text-right font-medium text-muted-foreground">Actions</th>
+              {showActions && <th className="px-4 py-3 text-right font-medium text-muted-foreground">Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -118,63 +125,71 @@ export function TripTable({
                       {trip.status.replace("_", " ").toUpperCase()}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      {trip.status === "draft" && (
-                        <>
+                  {showActions && (
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        {trip.status === "draft" && (
+                          <>
+                            {canManage && (
+                              <button
+                                onClick={() => onDispatch(trip)}
+                                className="p-1.5 rounded text-muted-foreground hover:bg-blue-500/10 hover:text-blue-600 transition-colors"
+                                title="Dispatch Trip"
+                              >
+                                <Play className="w-4 h-4" />
+                              </button>
+                            )}
+                            {canManage && (
+                              <button
+                                onClick={() => onEdit(trip)}
+                                className="p-1.5 rounded text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                                title="Edit Trip"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                            )}
+                            {canDelete && (
+                              <button
+                                onClick={() => {
+                                  if (
+                                    confirm(
+                                      `Are you sure you want to delete trip ${trip.tripNumber}?`
+                                    )
+                                  ) {
+                                    onDelete(trip._id);
+                                  }
+                                }}
+                                className="p-1.5 rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                                title="Delete Trip"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </>
+                        )}
+
+                        {(trip.status === "dispatched" || trip.status === "in_progress") && canManage && (
                           <button
-                            onClick={() => onDispatch(trip)}
-                            className="p-1.5 rounded text-muted-foreground hover:bg-blue-500/10 hover:text-blue-600 transition-colors"
-                            title="Dispatch Trip"
+                            onClick={() => onComplete(trip)}
+                            className="p-1.5 rounded text-muted-foreground hover:bg-green-500/10 hover:text-green-600 transition-colors"
+                            title="Complete Trip"
                           >
-                            <Play className="w-4 h-4" />
+                            <CheckCircle2 className="w-4 h-4" />
                           </button>
+                        )}
+
+                        {trip.status !== "completed" && trip.status !== "cancelled" && canManage && (
                           <button
-                            onClick={() => onEdit(trip)}
-                            className="p-1.5 rounded text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-                            title="Edit Trip"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              if (
-                                confirm(
-                                  `Are you sure you want to delete trip ${trip.tripNumber}?`
-                                )
-                              ) {
-                                onDelete(trip._id);
-                              }
-                            }}
+                            onClick={() => onCancel(trip)}
                             className="p-1.5 rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                            title="Delete Trip"
+                            title="Cancel Trip"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <XCircle className="w-4 h-4" />
                           </button>
-                        </>
-                      )}
-
-                      {(trip.status === "dispatched" || trip.status === "in_progress") && (
-                        <button
-                          onClick={() => onComplete(trip)}
-                          className="p-1.5 rounded text-muted-foreground hover:bg-green-500/10 hover:text-green-600 transition-colors"
-                          title="Complete Trip"
-                        >
-                          <CheckCircle2 className="w-4 h-4" />
-                        </button>
-                      )}
-
-                      {trip.status !== "completed" && trip.status !== "cancelled" && (
-                        <button
-                          onClick={() => onCancel(trip)}
-                          className="p-1.5 rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                          title="Cancel Trip"
-                        >
-                          <XCircle className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  </td>
+                        )}
+                      </div>
+                    </td>
+                  )}
                 </tr>
               );
             })}

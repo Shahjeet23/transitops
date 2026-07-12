@@ -3,6 +3,8 @@
 import { Edit, Trash2, Wrench, CheckCircle2, XCircle } from "lucide-react";
 import type { MaintenanceLog } from "@/lib/maintenance.api";
 import type { Vehicle } from "@/lib/vehicle.api";
+import { useAuthStore } from "@/store/auth.store";
+import { hasPermission } from "@/lib/rbac";
 
 interface Props {
   logs: MaintenanceLog[];
@@ -30,6 +32,9 @@ export function MaintenanceTable({
   onCancel,
   isLoading,
 }: Props) {
+  const user = useAuthStore(s => s.user);
+  const canManage = hasPermission(user?.role, 'manage_maintenance');
+
   if (isLoading) {
     return (
       <div className="rounded-xl border border-border bg-card p-8 flex justify-center">
@@ -64,7 +69,7 @@ export function MaintenanceTable({
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">Schedule</th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">Cost</th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
-              <th className="px-4 py-3 text-right font-medium text-muted-foreground">Actions</th>
+              {canManage && <th className="px-4 py-3 text-right font-medium text-muted-foreground">Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -100,59 +105,61 @@ export function MaintenanceTable({
                       {log.status.replace("_", " ").toUpperCase()}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      {log.status === "scheduled" && (
-                        <>
+                  {canManage && (
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        {log.status === "scheduled" && (
+                          <>
+                            <button
+                              onClick={() => onStart(log)}
+                              className="p-1.5 rounded text-muted-foreground hover:bg-amber-500/10 hover:text-amber-600 transition-colors"
+                              title="Start Maintenance"
+                            >
+                              <Wrench className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => onEdit(log)}
+                              className="p-1.5 rounded text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                              title="Edit Record"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (confirm(`Delete maintenance record: ${log.title}?`)) {
+                                  onDelete(log._id);
+                                }
+                              }}
+                              className="p-1.5 rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                              title="Delete Record"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
+
+                        {log.status === "in_progress" && (
                           <button
-                            onClick={() => onStart(log)}
-                            className="p-1.5 rounded text-muted-foreground hover:bg-amber-500/10 hover:text-amber-600 transition-colors"
-                            title="Start Maintenance"
+                            onClick={() => onComplete(log)}
+                            className="p-1.5 rounded text-muted-foreground hover:bg-green-500/10 hover:text-green-600 transition-colors"
+                            title="Complete Maintenance"
                           >
-                            <Wrench className="w-4 h-4" />
+                            <CheckCircle2 className="w-4 h-4" />
                           </button>
+                        )}
+
+                        {log.status !== "completed" && log.status !== "cancelled" && (
                           <button
-                            onClick={() => onEdit(log)}
-                            className="p-1.5 rounded text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-                            title="Edit Record"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              if (confirm(`Delete maintenance record: ${log.title}?`)) {
-                                onDelete(log._id);
-                              }
-                            }}
+                            onClick={() => onCancel(log)}
                             className="p-1.5 rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                            title="Delete Record"
+                            title="Cancel Maintenance"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <XCircle className="w-4 h-4" />
                           </button>
-                        </>
-                      )}
-
-                      {log.status === "in_progress" && (
-                        <button
-                          onClick={() => onComplete(log)}
-                          className="p-1.5 rounded text-muted-foreground hover:bg-green-500/10 hover:text-green-600 transition-colors"
-                          title="Complete Maintenance"
-                        >
-                          <CheckCircle2 className="w-4 h-4" />
-                        </button>
-                      )}
-
-                      {log.status !== "completed" && log.status !== "cancelled" && (
-                        <button
-                          onClick={() => onCancel(log)}
-                          className="p-1.5 rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                          title="Cancel Maintenance"
-                        >
-                          <XCircle className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  </td>
+                        )}
+                      </div>
+                    </td>
+                  )}
                 </tr>
               );
             })}

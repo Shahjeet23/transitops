@@ -20,8 +20,12 @@ import {
   TripCancelDialog,
 } from "@/components/trips/trip-lifecycle-dialogs";
 import type { Trip } from "@/lib/trip.api";
+import { useAuthStore } from "@/store/auth.store";
+import { hasPermission } from "@/lib/rbac";
 
 export default function TripsPage() {
+  const user = useAuthStore(s => s.user);
+  const canManage = hasPermission(user?.role, 'manage_trips');
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
@@ -148,16 +152,18 @@ export default function TripsPage() {
             Manage your fleet's trips and routes
           </p>
         </div>
-        <button
-          onClick={() => {
-            setActiveTrip(undefined);
-            setFormDialogOpen(true);
-          }}
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 active:opacity-80 transition shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          Create Trip
-        </button>
+        {canManage && (
+          <button
+            onClick={() => {
+              setActiveTrip(undefined);
+              setFormDialogOpen(true);
+            }}
+            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 active:opacity-80 transition shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            Create Trip
+          </button>
+        )}
       </div>
 
       {/* Filters */}

@@ -95,6 +95,17 @@ const toggleUserStatus = asyncHandler(async (req, res) => {
   return sendSuccess(res, { user }, `User ${action} successfully`);
 });
 
+/**
+ * PATCH /api/auth/users/:id/role
+ */
+const updateUserRole = asyncHandler(async (req, res) => {
+  const { role } = req.body;
+  const AppError = require('../utils/AppError');
+  if (!role) throw new AppError('Role is required', 400);
+  const user = await authService.updateUserRole(req.params.id, role, req.user._id);
+  return sendSuccess(res, { user }, 'User role updated successfully');
+});
+
 module.exports = {
   register,
   login,
@@ -105,4 +116,5 @@ module.exports = {
   updateProfile,
   getUsers,
   toggleUserStatus,
+  updateUserRole,
 };

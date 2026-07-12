@@ -20,8 +20,12 @@ import {
   useDeleteMaintenance,
 } from "@/hooks/use-maintenance";
 import type { MaintenanceLog, CreateMaintenancePayload, UpdateMaintenancePayload } from "@/lib/maintenance.api";
+import { useAuthStore } from "@/store/auth.store";
+import { hasPermission } from "@/lib/rbac";
 
 export default function MaintenancePage() {
+  const user = useAuthStore(s => s.user);
+  const canManage = hasPermission(user?.role, 'manage_maintenance');
   const [activeTab, setActiveTab] = useState<string>("all");
 
   const { data: maintenances, isLoading } = useMaintenances({
@@ -71,16 +75,18 @@ export default function MaintenancePage() {
             Manage vehicle maintenance schedules, logs, and service history.
           </p>
         </div>
-        <button
-          onClick={() => {
-            setEditingLog(null);
-            setIsFormOpen(true);
-          }}
-          className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity"
-        >
-          <Plus className="w-5 h-5" />
-          Schedule Maintenance
-        </button>
+        {canManage && (
+          <button
+            onClick={() => {
+              setEditingLog(null);
+              setIsFormOpen(true);
+            }}
+            className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity"
+          >
+            <Plus className="w-5 h-5" />
+            Schedule Maintenance
+          </button>
+        )}
       </div>
 
       <div className="flex space-x-1 rounded-xl bg-muted/50 p-1 w-full sm:w-fit overflow-x-auto">

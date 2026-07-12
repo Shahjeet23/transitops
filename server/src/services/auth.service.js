@@ -245,6 +245,28 @@ async function toggleUserStatus(targetUserId, requestingUserId) {
   return user.toPublic();
 }
 
+/**
+ * Update a user's role (admin only).
+ * Admin cannot remove their own admin privileges.
+ * @param {string} targetUserId
+ * @param {string} newRole
+ * @param {string} requestingUserId
+ * @returns {object} Updated user
+ */
+async function updateUserRole(targetUserId, newRole, requestingUserId) {
+  if (targetUserId === requestingUserId.toString() && newRole !== 'admin') {
+    throw new AppError('You cannot remove your own admin privileges', 400);
+  }
+
+  const user = await User.findById(targetUserId);
+  if (!user) throw new AppError('User not found', 404);
+
+  user.role = newRole;
+  await user.save({ validateModifiedOnly: true });
+
+  return user.toPublic();
+}
+
 module.exports = {
   registerUser,
   loginUser,
@@ -255,4 +277,5 @@ module.exports = {
   updateProfile,
   getAllUsers,
   toggleUserStatus,
+  updateUserRole,
 };

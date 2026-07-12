@@ -48,4 +48,28 @@ export const authApi = {
     const { data } = await api.get("/auth/me");
     return data.data;
   },
+
+  updateProfile: async (payload: { name: string }): Promise<{ user: User }> => {
+    const { data } = await api.put("/auth/profile", payload);
+    return data.data;
+  },
+
+  changePassword: async (payload: any): Promise<void> => {
+    await api.put("/auth/change-password", payload);
+  },
+
+  getUsers: async (params?: any) => {
+    const { data } = await api.get("/auth/users", { params });
+    return data;
+  },
+
+  toggleUserStatus: async (userId: string): Promise<{ user: User }> => {
+    const { data } = await api.patch(`/auth/users/${userId}/status`);
+    return data.data;
+  },
+
+  updateUserRole: async (userId: string, role: string): Promise<{ user: User }> => {
+    const { data } = await api.patch(`/auth/users/${userId}/role`, { role });
+    return data.data;
+  },
 };

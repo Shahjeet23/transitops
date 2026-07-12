@@ -16,20 +16,22 @@ import {
   Truck,
   Users,
   Wrench,
+  Bell,
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import { useLogout } from "@/hooks/use-auth";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/vehicles", label: "Vehicles", icon: Truck },
-  { href: "/dashboard/drivers", label: "Drivers", icon: Users },
-  { href: "/dashboard/trips", label: "Trips", icon: ClipboardList },
-  { href: "/dashboard/maintenance", label: "Maintenance", icon: Wrench },
-  { href: "/dashboard/fuel", label: "Fuel", icon: Fuel },
-  { href: "/dashboard/expenses", label: "Expenses", icon: DollarSign },
-  { href: "/dashboard/reports", label: "Reports", icon: BarChart3 },
-  { href: "/dashboard/assistant", label: "Assistant", icon: Sparkles },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ['admin', 'fleet_manager', 'dispatcher', 'safety_officer', 'financial_analyst'] },
+  { href: "/dashboard/vehicles", label: "Vehicles", icon: Truck, roles: ['admin', 'fleet_manager', 'dispatcher', 'safety_officer'] },
+  { href: "/dashboard/drivers", label: "Drivers", icon: Users, roles: ['admin', 'fleet_manager', 'dispatcher', 'safety_officer'] },
+  { href: "/dashboard/trips", label: "Trips", icon: ClipboardList, roles: ['admin', 'fleet_manager', 'dispatcher'] },
+  { href: "/dashboard/maintenance", label: "Maintenance", icon: Wrench, roles: ['admin', 'fleet_manager', 'safety_officer'] },
+  { href: "/dashboard/fuel", label: "Fuel", icon: Fuel, roles: ['admin', 'fleet_manager', 'dispatcher', 'financial_analyst'] },
+  { href: "/dashboard/expenses", label: "Expenses", icon: DollarSign, roles: ['admin', 'financial_analyst'] },
+  { href: "/dashboard/reports", label: "Reports", icon: BarChart3, roles: ['admin', 'fleet_manager', 'financial_analyst'] },
+  { href: "/dashboard/assistant", label: "Assistant", icon: Sparkles, roles: ['admin', 'fleet_manager', 'dispatcher', 'safety_officer', 'financial_analyst'] },
+  { href: "/dashboard/alerts", label: "Alerts", icon: Bell, roles: ['admin', 'fleet_manager', 'dispatcher', 'safety_officer', 'financial_analyst'] },
 ];
 
 function NavItem({
@@ -78,18 +80,18 @@ export default function DashboardLayout({
       {/* ── Sidebar ── */}
       <aside className="w-64 shrink-0 flex flex-col bg-sidebar border-r border-sidebar-border">
         {/* Logo */}
-        <div className="flex items-center gap-3 px-5 h-16 border-b border-sidebar-border shrink-0">
+        <Link href="/dashboard" className="flex items-center gap-3 px-5 h-16 border-b border-sidebar-border shrink-0 hover:opacity-80 transition-opacity">
           <div className="p-1.5 rounded-lg bg-sidebar-primary">
             <Truck className="w-5 h-5 text-sidebar-primary-foreground" />
           </div>
           <span className="font-bold text-sidebar-foreground tracking-tight text-lg">
             TransitOps
           </span>
-        </div>
+        </Link>
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-          {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
+          {NAV_ITEMS.filter(item => user?.role ? item.roles.includes(user.role) : true).map(({ href, label, icon: Icon }) => (
             <NavItem
               key={href}
               href={href}
@@ -120,7 +122,7 @@ export default function DashboardLayout({
           {/* Settings + Logout */}
           <div className="space-y-0.5">
             <Link
-              href="/settings"
+              href="/dashboard/settings"
               className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition"
             >
               <Settings className="w-4 h-4" />

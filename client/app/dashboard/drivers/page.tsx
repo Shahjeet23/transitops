@@ -12,8 +12,12 @@ import { DriverTable } from "@/components/drivers/driver-table";
 import { DriverDialog } from "@/components/drivers/driver-dialog";
 import { DriverForm } from "@/components/drivers/driver-form";
 import type { Driver } from "@/lib/driver.api";
+import { useAuthStore } from "@/store/auth.store";
+import { hasPermission } from "@/lib/rbac";
 
 export default function DriversPage() {
+  const user = useAuthStore(s => s.user);
+  const canManage = hasPermission(user?.role, 'manage_drivers');
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
@@ -74,16 +78,18 @@ export default function DriversPage() {
             Manage your fleet drivers and their licenses
           </p>
         </div>
-        <button
-          onClick={() => {
-            setEditingDriver(undefined);
-            setDialogOpen(true);
-          }}
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 active:opacity-80 transition shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          Add Driver
-        </button>
+        {canManage && (
+          <button
+            onClick={() => {
+              setEditingDriver(undefined);
+              setDialogOpen(true);
+            }}
+            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 active:opacity-80 transition shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            Add Driver
+          </button>
+        )}
       </div>
 
       {/* Filters */}

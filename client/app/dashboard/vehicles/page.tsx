@@ -12,8 +12,12 @@ import { VehicleTable } from "@/components/vehicles/vehicle-table";
 import { VehicleDialog } from "@/components/vehicles/vehicle-dialog";
 import { VehicleForm } from "@/components/vehicles/vehicle-form";
 import type { Vehicle } from "@/lib/vehicle.api";
+import { useAuthStore } from "@/store/auth.store";
+import { hasPermission } from "@/lib/rbac";
 
 export default function VehiclesPage() {
+  const user = useAuthStore(s => s.user);
+  const canManage = hasPermission(user?.role, 'manage_vehicles');
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [type, setType] = useState("");
@@ -76,16 +80,18 @@ export default function VehiclesPage() {
             Manage your fleet of vehicles
           </p>
         </div>
-        <button
-          onClick={() => {
-            setEditingVehicle(undefined);
-            setDialogOpen(true);
-          }}
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 active:opacity-80 transition shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          Add Vehicle
-        </button>
+        {canManage && (
+          <button
+            onClick={() => {
+              setEditingVehicle(undefined);
+              setDialogOpen(true);
+            }}
+            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 active:opacity-80 transition shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            Add Vehicle
+          </button>
+        )}
       </div>
 
       {/* Filters */}

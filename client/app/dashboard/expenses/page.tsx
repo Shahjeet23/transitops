@@ -15,8 +15,12 @@ import {
   useRejectExpense,
 } from "@/hooks/use-expense";
 import type { Expense, CreateExpensePayload, UpdateExpensePayload } from "@/lib/expense.api";
+import { useAuthStore } from "@/store/auth.store";
+import { hasPermission } from "@/lib/rbac";
 
 export default function ExpensesPage() {
+  const user = useAuthStore(s => s.user);
+  const canManage = hasPermission(user?.role, 'manage_expenses');
   const { data: expensesList, isLoading } = useExpenses();
   
   const createMutation = useCreateExpense();
@@ -81,16 +85,18 @@ export default function ExpensesPage() {
             Manage operational costs and approval workflows.
           </p>
         </div>
-        <button
-          onClick={() => {
-            setEditingExpense(null);
-            setIsFormOpen(true);
-          }}
-          className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity"
-        >
-          <Plus className="w-5 h-5" />
-          Add Expense
-        </button>
+        {canManage && (
+          <button
+            onClick={() => {
+              setEditingExpense(null);
+              setIsFormOpen(true);
+            }}
+            className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity"
+          >
+            <Plus className="w-5 h-5" />
+            Add Expense
+          </button>
+        )}
       </div>
 
       <ExpenseTable

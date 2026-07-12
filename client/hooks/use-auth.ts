@@ -46,3 +46,25 @@ export function useLogout() {
     },
   });
 }
+
+export function useUpdateProfile() {
+  const setAuth = useAuthStore((s) => s.setAuth);
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const refreshToken = useAuthStore((s) => s.refreshToken);
+
+  return useMutation({
+    mutationFn: (payload: { name: string }) => authApi.updateProfile(payload),
+    onSuccess: (data) => {
+      // We need to keep tokens while updating user
+      if (accessToken && refreshToken) {
+        setAuth(data.user, accessToken, refreshToken);
+      }
+    },
+  });
+}
+
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: (payload: any) => authApi.changePassword(payload),
+  });
+}

@@ -3,6 +3,8 @@
 import { Edit, Trash2, Fuel } from "lucide-react";
 import type { FuelLog } from "@/lib/fuel.api";
 import type { Vehicle } from "@/lib/vehicle.api";
+import { useAuthStore } from "@/store/auth.store";
+import { hasPermission } from "@/lib/rbac";
 
 interface Props {
   logs: FuelLog[];
@@ -12,6 +14,9 @@ interface Props {
 }
 
 export function FuelTable({ logs, onEdit, onDelete, isLoading }: Props) {
+  const user = useAuthStore(s => s.user);
+  const canManage = hasPermission(user?.role, 'manage_fuel');
+
   if (isLoading) {
     return (
       <div className="rounded-xl border border-border bg-card p-8 flex justify-center">
@@ -48,7 +53,7 @@ export function FuelTable({ logs, onEdit, onDelete, isLoading }: Props) {
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">Fuel Info</th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">Cost</th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">Odometer</th>
-              <th className="px-4 py-3 text-right font-medium text-muted-foreground">Actions</th>
+              {canManage && <th className="px-4 py-3 text-right font-medium text-muted-foreground">Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -94,28 +99,30 @@ export function FuelTable({ logs, onEdit, onDelete, isLoading }: Props) {
                   <td className="px-4 py-3 text-muted-foreground tabular-nums">
                     {log.odometerKm.toLocaleString()} km
                   </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <button
-                        onClick={() => onEdit(log)}
-                        className="p-1.5 rounded text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-                        title="Edit Log"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (confirm("Are you sure you want to delete this fuel log?")) {
-                            onDelete(log._id);
-                          }
-                        }}
-                        className="p-1.5 rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                        title="Delete Log"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
+                  {canManage && (
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => onEdit(log)}
+                          className="p-1.5 rounded text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                          title="Edit Log"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm("Are you sure you want to delete this fuel log?")) {
+                              onDelete(log._id);
+                            }
+                          }}
+                          className="p-1.5 rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                          title="Delete Log"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               );
             })}

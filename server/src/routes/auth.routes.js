@@ -47,4 +47,7 @@ router.get('/users', authenticate, authorize('admin'), authController.getUsers);
 // PATCH /api/auth/users/:id/status
 router.patch('/users/:id/status', authenticate, authorize('admin'), authController.toggleUserStatus);
 
+// PATCH /api/auth/users/:id/role
+router.patch('/users/:id/role', authenticate, authorize('admin'), authController.updateUserRole);
+
 module.exports = router;
